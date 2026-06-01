@@ -1,0 +1,71 @@
+
+-- Step 1: Create & Select Database
+CREATE DATABASE IF NOT EXISTS banking;
+USE banking;
+
+-- ============================================================
+-- TABLE 1: customers
+-- ============================================================
+CREATE TABLE customers (
+    customer_id     VARCHAR(10)     PRIMARY KEY,
+    full_name       VARCHAR(100)    NOT NULL,
+    email           VARCHAR(100)    UNIQUE NOT NULL,
+    phone           BIGINT,
+    city            VARCHAR(50),
+    dob             DATE,
+    gender          ENUM('Male', 'Female', 'Other'),
+    joined_date     DATE
+);
+
+-- ============================================================
+-- TABLE 2: accounts
+-- ============================================================
+CREATE TABLE accounts (
+    account_id      VARCHAR(10)     PRIMARY KEY,
+    customer_id     VARCHAR(10)     NOT NULL,
+    account_type    ENUM('Savings', 'Current', 'Fixed Deposit', 'Recurring Deposit') NOT NULL,
+    balance         DECIMAL(15, 2)  DEFAULT 0.00,
+    currency        VARCHAR(5)      DEFAULT 'INR',
+    opened_date     DATE,
+    status          ENUM('Active', 'Inactive', 'Frozen') DEFAULT 'Active',
+    branch          VARCHAR(100),
+
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+);
+
+-- ============================================================
+-- TABLE 3: transactions
+-- ============================================================
+CREATE TABLE transactions (
+    transaction_id      VARCHAR(12)     PRIMARY KEY,
+    account_id          VARCHAR(10)     NOT NULL,
+    transaction_type    ENUM('Credit', 'Debit', 'Transfer', 'ATM Withdrawal',
+                             'Online Payment', 'UPI', 'NEFT', 'RTGS', 'IMPS', 'EMI') NOT NULL,
+    amount              DECIMAL(15, 2)  NOT NULL,
+    currency            VARCHAR(5)      DEFAULT 'INR',
+    txn_date            DATE,
+    txn_time            TIME,
+    status              ENUM('Success', 'Failed', 'Pending') DEFAULT 'Pending',
+    reference_no        VARCHAR(20),
+
+    FOREIGN KEY (account_id) REFERENCES accounts(account_id)
+);
+
+-- ============================================================
+-- TABLE 4: loans
+-- ============================================================
+CREATE TABLE loans (
+    loan_id             VARCHAR(10)     PRIMARY KEY,
+    customer_id         VARCHAR(10)     NOT NULL,
+    loan_type           ENUM('Home Loan', 'Car Loan', 'Personal Loan',
+                             'Education Loan', 'Business Loan') NOT NULL,
+    principal_amount    DECIMAL(15, 2)  NOT NULL,
+    interest_rate_pct   DECIMAL(5, 2),
+    tenure_months       INT,
+    emi_amount          DECIMAL(15, 2),
+    disbursement_date   DATE,
+    status              ENUM('Active', 'Closed', 'Defaulted') DEFAULT 'Active',
+    branch              VARCHAR(100),
+
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+);

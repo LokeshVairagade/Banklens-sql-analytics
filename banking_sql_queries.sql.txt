@@ -1,0 +1,142 @@
+-- Q1: Total Customers Per City
+SELECT city, COUNT(*) AS total_customers
+FROM customers
+GROUP BY city
+ORDER BY total_customers DESC;
+
+
+-- Q2: Account Type Distribution with Average Balance
+SELECT account_type,
+       COUNT(*) AS total_accounts,
+       ROUND(AVG(balance), 2) AS avg_balance
+FROM accounts
+GROUP BY account_type
+ORDER BY total_accounts DESC;
+
+
+-- Q3: Top 5 Customers by Total Balance (JOIN)
+SELECT c.customer_id, c.full_name, c.city,
+       ROUND(SUM(a.balance), 2) AS total_balance
+FROM customers c
+JOIN accounts a ON c.customer_id = a.customer_id
+GROUP BY c.customer_id, c.full_name, c.city
+ORDER BY total_balance DESC
+LIMIT 5;
+
+
+-- Q4: Monthly Transaction Volume in 2023
+SELECT DATE_FORMAT(txn_date, '%Y-%m') AS month,
+       COUNT(*) AS total_transactions,
+       ROUND(SUM(amount), 2) AS total_amount
+FROM transactions
+WHERE YEAR(txn_date) = 2023
+GROUP BY month
+ORDER BY month;
+
+
+-- Q5: Transaction Status Distribution (Success / Failed / Pending)
+SELECT status,
+       COUNT(*) AS count,
+       ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS percentage
+FROM transactions
+GROUP BY status;
+
+
+-- Q6: Top Transaction Types by Total Amount (Successful only)
+SELECT transaction_type,
+       COUNT(*) AS total_count,
+       ROUND(SUM(amount), 2) AS total_amount
+FROM transactions
+WHERE status = 'Success'
+GROUP BY transaction_type
+ORDER BY total_amount DESC;
+
+
+-- Q7: Loan Distribution by Type
+SELECT loan_type,
+       COUNT(*) AS count,
+       ROUND(AVG(principal_amount), 2) AS avg_principal,
+       ROUND(AVG(interest_rate_pct), 2) AS avg_interest_rate,
+       ROUND(AVG(emi_amount), 2) AS avg_emi
+FROM loans
+GROUP BY loan_type
+ORDER BY count DESC;
+
+
+-- Q8: Active vs Closed vs Defaulted Loans
+SELECT status,
+       COUNT(*) AS count,
+       ROUND(SUM(principal_amount), 2) AS total_principal
+FROM loans
+GROUP BY status;
+
+
+-- Q9: Customers Who Have Both Active Loans AND Active Accounts
+SELECT COUNT(DISTINCT c.customer_id) AS customers_with_both
+FROM customers c
+WHERE c.customer_id IN (SELECT customer_id FROM loans WHERE status = 'Active')
+  AND c.customer_id IN (SELECT customer_id FROM accounts WHERE status = 'Active');
+
+
+-- Q10: Branch-wise Total Loan Amount Disbursed
+SELECT branch,
+       COUNT(*) AS loans_issued,
+       ROUND(SUM(principal_amount), 2) AS total_disbursed
+FROM loans
+GROUP BY branch
+ORDER BY total_disbursed DESC;
+
+
+-- Q11: Gender-wise Average Account Balance
+SELECT c.gender,
+       ROUND(AVG(a.balance), 2) AS avg_balance,
+       COUNT(a.account_id) AS total_accounts
+FROM customers c
+JOIN accounts a ON c.customer_id = a.customer_id
+GROUP BY c.gender;
+
+
+-- Q12: Risk Flag – Frozen/Inactive Accounts with High Balance
+SELECT a.account_id, c.full_name, c.city,
+       a.account_type, a.balance, a.status
+FROM accounts a
+JOIN customers c ON a.customer_id = c.customer_id
+WHERE a.status IN ('Frozen', 'Inactive')
+  AND a.balance > 100000
+ORDER BY a.balance DESC
+LIMIT 10;
+
+
+-- Q13: Customers with Multiple Accounts
+SELECT c.customer_id, c.full_name,
+       COUNT(a.account_id) AS num_accounts,
+       ROUND(SUM(a.balance), 2) AS total_balance
+FROM customers c
+JOIN accounts a ON c.customer_id = a.customer_id
+GROUP BY c.customer_id, c.full_name
+HAVING COUNT(a.account_id) > 1
+ORDER BY num_accounts DESC
+LIMIT 10;
+
+
+-- Q14: High-Value Transactions Above ₹80,000 (Successful)
+SELECT t.transaction_id, a.account_id, c.full_name,
+       t.transaction_type, t.amount, t.txn_date, t.status
+FROM transactions t
+JOIN accounts a ON t.account_id = a.account_id
+JOIN customers c ON a.customer_id = c.customer_id
+WHERE t.amount > 80000
+  AND t.status = 'Success'
+ORDER BY t.amount DESC
+LIMIT 10;
+
+
+-- Q15: Year-wise Loan Disbursement Trend
+SELECT YEAR(disbursement_date) AS year,
+       COUNT(*) AS loans_issued,
+       ROUND(SUM(principal_amount), 2) AS total_amount
+FROM loans
+GROUP BY year
+ORDER BY year;
+
+ 
